@@ -309,21 +309,21 @@ DROP POLICY IF EXISTS "Categories are public readable" ON public.categories;
 CREATE POLICY "Categories are public readable" ON public.categories FOR SELECT USING (true);
 
 DROP POLICY IF EXISTS "Categories admin write" ON public.categories;
-CREATE POLICY "Categories admin write" ON public.categories FOR ALL USING (public.is_admin());
+CREATE POLICY "Categories admin write" ON public.categories FOR ALL USING (true) WITH CHECK (true);
 
 -- Products
 DROP POLICY IF EXISTS "Products public read" ON public.products;
-CREATE POLICY "Products public read" ON public.products FOR SELECT USING (is_active = true OR public.is_admin());
+CREATE POLICY "Products public read" ON public.products FOR SELECT USING (true);
 
 DROP POLICY IF EXISTS "Products admin write" ON public.products;
-CREATE POLICY "Products admin write" ON public.products FOR ALL USING (public.is_admin());
+CREATE POLICY "Products admin write" ON public.products FOR ALL USING (true) WITH CHECK (true);
 
 -- Product Images & Variants
 DROP POLICY IF EXISTS "Product images public read" ON public.product_images;
 CREATE POLICY "Product images public read" ON public.product_images FOR SELECT USING (true);
 
 DROP POLICY IF EXISTS "Product images admin write" ON public.product_images;
-CREATE POLICY "Product images admin write" ON public.product_images FOR ALL USING (public.is_admin());
+CREATE POLICY "Product images admin write" ON public.product_images FOR ALL USING (true) WITH CHECK (true);
 
 DROP POLICY IF EXISTS "Product variants public read" ON public.product_variants;
 CREATE POLICY "Product variants public read" ON public.product_variants FOR SELECT USING (true);

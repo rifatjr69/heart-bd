@@ -97,6 +97,16 @@ interface StoreContextType {
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
 
+const generateUUID = () => {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+};
+
 export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Products
   const [products, setProducts] = useState<Product[]>(() => {
@@ -202,20 +212,39 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Fetch initial data from Supabase if configured so all devices sync
   useEffect(() => {
     if (!isSupabaseConfigured || !supabase) return;
+    const client = supabase;
 
-    supabase.from('products').select('*').then(({ data, error }) => {
-      if (!error && data && data.length > 0) {
-        setProducts(data);
+    client.from('products').select('*').then(async ({ data, error }) => {
+      if (!error && data) {
+        if (data.length > 0) {
+          setProducts(data);
+        } else {
+          try {
+            await client.from('products').insert(INITIAL_PRODUCTS);
+            setProducts(INITIAL_PRODUCTS);
+          } catch (e) {
+            console.warn('Error seeding products:', e);
+          }
+        }
       }
     });
 
-    supabase.from('categories').select('*').then(({ data, error }) => {
-      if (!error && data && data.length > 0) {
-        setCategories(data);
+    client.from('categories').select('*').then(async ({ data, error }) => {
+      if (!error && data) {
+        if (data.length > 0) {
+          setCategories(data);
+        } else {
+          try {
+            await client.from('categories').insert(INITIAL_CATEGORIES);
+            setCategories(INITIAL_CATEGORIES);
+          } catch (e) {
+            console.warn('Error seeding categories:', e);
+          }
+        }
       }
     });
 
-    supabase.from('orders').select('*, order_items(*)').order('created_at', { ascending: false }).then(({ data, error }) => {
+    client.from('orders').select('*, order_items(*)').order('created_at', { ascending: false }).then(({ data, error }) => {
       if (!error && data && data.length > 0) {
         const formattedOrders = data.map((ord: any) => ({
           ...ord,
@@ -677,12 +706,16 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const addProduct = async (newP: Omit<Product, 'id'>) => {
     const created: Product = {
       ...newP,
-      id: `lh-p-${Date.now()}`,
+      id: generateUUID(),
     };
 
     if (isSupabaseConfigured && supabase) {
       try {
-        await supabase.from('products').insert([created]);
+        const { error } = await supabase.from('products').insert([created]);
+        if (error) {
+          console.error('Supabase product insert error:', error);
+          showToast('ডেটাবেজে সেভ করতে সমস্যা: ' + error.message);
+        }
       } catch (err) {
         console.warn('Error adding product to Supabase:', err);
       }
@@ -705,11 +738,24 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     showToast('পণ্য মুছে ফেলা হয়েছে');
   };
 
-  const addCategory = (newCat: Omit<Category, 'id'>) => {
+  const addCategory = async (newCat: Omit<Category, 'id'>) => {
     const created: Category = {
       ...newCat,
-      id: `cat-${Date.now()}`,
+      id: generateUUID(),
     };
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { error } = await supabase.from('categories').insert([created]);
+        if (error) {
+          console.error('Supabase category insert error:', error);
+          showToast('ক্যাটাগরি সেভ করতে সমস্যা: ' + error.message);
+        }
+      } catch (err) {
+        console.warn('Error adding category to Supabase:', err);
+      }
+    }
+
     setCategories((prev) => [...prev, created]);
     showToast(`নতুন ক্যাটাগরি "${newCat.name}" যোগ করা হয়েছে!`);
   };
