@@ -199,6 +199,33 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     localStorage.setItem('littlehug_settings', JSON.stringify(settings));
   }, [settings]);
 
+  // Fetch initial data from Supabase if configured so all devices sync
+  useEffect(() => {
+    if (!isSupabaseConfigured || !supabase) return;
+
+    supabase.from('products').select('*').then(({ data, error }) => {
+      if (!error && data && data.length > 0) {
+        setProducts(data);
+      }
+    });
+
+    supabase.from('categories').select('*').then(({ data, error }) => {
+      if (!error && data && data.length > 0) {
+        setCategories(data);
+      }
+    });
+
+    supabase.from('orders').select('*, order_items(*)').order('created_at', { ascending: false }).then(({ data, error }) => {
+      if (!error && data && data.length > 0) {
+        const formattedOrders = data.map((ord: any) => ({
+          ...ord,
+          items: ord.order_items || [],
+        }));
+        setOrders(formattedOrders);
+      }
+    });
+  }, []);
+
   useEffect(() => {
     if (user) {
       localStorage.setItem('littlehug_user', JSON.stringify(user));
@@ -425,7 +452,19 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return newOrder;
   };
 
-  const updateOrderStatus = (orderId: string, status: OrderStatus, courierId?: string) => {
+  const updateOrderStatus = async (orderId: string, status: OrderStatus, courierId?: string) => {
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const updatePayload: any = { status };
+        if (courierId !== undefined) {
+          updatePayload.courier_tracking_id = courierId;
+        }
+        await supabase.from('orders').update(updatePayload).eq('id', orderId);
+      } catch (err) {
+        console.warn('Error updating order status in Supabase:', err);
+      }
+    }
+
     setOrders((prev) =>
       prev.map((ord) => {
         if (ord.id === orderId) {
@@ -623,21 +662,45 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   // Admin inventory updates
-  const updateProduct = (updated: Product) => {
+  const updateProduct = async (updated: Product) => {
+    if (isSupabaseConfigured && supabase) {
+      try {
+        await supabase.from('products').update(updated).eq('id', updated.id);
+      } catch (err) {
+        console.warn('Error updating product in Supabase:', err);
+      }
+    }
     setProducts((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
     showToast('পণ্য সফলভাবে আপডেট করা হয়েছে');
   };
 
-  const addProduct = (newP: Omit<Product, 'id'>) => {
+  const addProduct = async (newP: Omit<Product, 'id'>) => {
     const created: Product = {
       ...newP,
       id: `lh-p-${Date.now()}`,
     };
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        await supabase.from('products').insert([created]);
+      } catch (err) {
+        console.warn('Error adding product to Supabase:', err);
+      }
+    }
+
     setProducts((prev) => [created, ...prev]);
     showToast('নতুন পণ্য যুক্ত করা হয়েছে!');
   };
 
-  const deleteProduct = (productId: string) => {
+  const deleteProduct = async (productId: string) => {
+    if (isSupabaseConfigured && supabase) {
+      try {
+        await supabase.from('products').delete().eq('id', productId);
+      } catch (err) {
+        console.warn('Error deleting product from Supabase:', err);
+      }
+    }
+
     setProducts((prev) => prev.filter((p) => p.id !== productId));
     showToast('পণ্য মুছে ফেলা হয়েছে');
   };
