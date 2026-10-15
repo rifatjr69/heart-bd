@@ -711,8 +711,26 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     if (isSupabaseConfigured && supabase) {
       try {
-        // Remove category_slug before inserting because it does not exist in the products table
-        const { category_slug, ...productToInsert } = created;
+        // Explicitly define fields to insert, excluding unsupported ones
+        const productToInsert = {
+          id: created.id,
+          category_id: created.category_id,
+          name: created.name,
+          name_bn: created.name_bn,
+          slug: created.slug,
+          description: created.description,
+          price: created.price,
+          old_price: created.old_price,
+          discount_percent: created.discount_percent,
+          badge: created.badge,
+          stock: created.stock,
+          image_url: created.image_url,
+          is_active: created.is_active,
+          is_featured: created.is_featured,
+          is_flash_sale: created.is_flash_sale,
+          is_hot_deal: created.is_hot_deal
+        };
+        
         const { error } = await supabase.from('products').insert([productToInsert]);
         if (error) {
           console.error('Supabase product insert error details:', error);
