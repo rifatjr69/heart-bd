@@ -88,6 +88,7 @@ interface StoreContextType {
   addProduct: (product: Omit<Product, 'id'>) => void;
   deleteProduct: (productId: string) => void;
   addCategory: (category: Omit<Category, 'id'>) => void;
+  deleteCategory: (categoryId: string) => Promise<void>;
   updateSettings: (newSettings: Partial<SiteSettings>) => void;
 
   // Toast / feedback
@@ -782,6 +783,19 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     showToast(`নতুন ক্যাটাগরি "${newCat.name}" যোগ করা হয়েছে!`);
   };
 
+  const deleteCategory = async (categoryId: string) => {
+    if (isSupabaseConfigured && supabase) {
+      try {
+        await supabase.from('categories').delete().eq('id', categoryId);
+      } catch (err) {
+        console.warn('Error deleting category from Supabase:', err);
+      }
+    }
+
+    setCategories((prev) => prev.filter((c) => c.id !== categoryId));
+    showToast('ক্যাটাগরি মুছে ফেলা হয়েছে');
+  };
+
   const updateSettings = (newSettings: Partial<SiteSettings>) => {
     setSettings((prev) => ({ ...prev, ...newSettings }));
     showToast('সেটিংস সংরক্ষণ করা হয়েছে');
@@ -843,6 +857,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         addProduct,
         deleteProduct,
         addCategory,
+        deleteCategory,
         updateSettings,
         toastMessage,
         showToast,

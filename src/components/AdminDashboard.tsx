@@ -68,6 +68,7 @@ export const AdminDashboard: React.FC = () => {
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategoryNameBn, setNewCategoryNameBn] = useState('');
   const [newCategorySubLabel, setNewCategorySubLabel] = useState('');
+  const [newCategoryImageUrl, setNewCategoryImageUrl] = useState('');
 
   // New Product Form State
   const [newProductForm, setNewProductForm] = useState<Partial<Product>>({
@@ -237,7 +238,7 @@ export const AdminDashboard: React.FC = () => {
       name: newCategoryName.trim(),
       name_bn: newCategoryNameBn.trim() || newCategoryName.trim(),
       slug,
-      image_url: '/src/assets/images/gift_box_pink_teddy_1792050433788.jpg',
+      image_url: newCategoryImageUrl.trim() || '/assets/images/gift_box_pink_teddy_1792050433788.jpg',
       sub_label: newCategorySubLabel.trim() || 'New Collection',
       sort_order: categories.length + 1,
       is_active: true,
@@ -246,6 +247,7 @@ export const AdminDashboard: React.FC = () => {
     setNewCategoryName('');
     setNewCategoryNameBn('');
     setNewCategorySubLabel('');
+    setNewCategoryImageUrl('');
     setIsNewCategoryModalOpen(false);
   };
 
@@ -427,7 +429,7 @@ export const AdminDashboard: React.FC = () => {
                       <button
                         key={c.id}
                         onClick={() => setProductCategoryFilter(c.slug)}
-                        className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                        className={`group px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                           isSelected
                             ? 'bg-[#F8628D] text-white shadow-xs'
                             : 'bg-pink-50 text-gray-700 hover:bg-pink-100 border border-pink-200'
@@ -440,6 +442,17 @@ export const AdminDashboard: React.FC = () => {
                           }`}
                         >
                           {count}
+                        </span>
+                        <span
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (window.confirm(`আপনি কি সত্যিই ক্যাটাগরি "${c.name}" মুছে ফেলতে চান?`)) {
+                                deleteCategory(c.id);
+                              }
+                            }}
+                            className={`opacity-0 group-hover:opacity-100 p-0.5 rounded-full ${isSelected ? 'hover:bg-white/20' : 'hover:bg-pink-200'}`}
+                        >
+                          ✕
                         </span>
                       </button>
                     );
@@ -1398,6 +1411,18 @@ export const AdminDashboard: React.FC = () => {
                     value={newCategorySubLabel}
                     onChange={(e) => setNewCategorySubLabel(e.target.value)}
                     placeholder="e.g. Kids, Newborn, Special"
+                    className="w-full px-3 py-2 border rounded-xl"
+                  />
+                </div>
+                <div>
+                  <label className="font-bold text-gray-700 block mb-1">
+                    ক্যাটাগরির ছবি (Image URL)
+                  </label>
+                  <input
+                    type="text"
+                    value={newCategoryImageUrl}
+                    onChange={(e) => setNewCategoryImageUrl(e.target.value)}
+                    placeholder="e.g. /assets/images/..."
                     className="w-full px-3 py-2 border rounded-xl"
                   />
                 </div>
