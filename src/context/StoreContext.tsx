@@ -711,10 +711,14 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     if (isSupabaseConfigured && supabase) {
       try {
-        const { error } = await supabase.from('products').insert([created]);
+        // Remove category_slug before inserting because it does not exist in the products table
+        const { category_slug, ...productToInsert } = created;
+        const { error } = await supabase.from('products').insert([productToInsert]);
         if (error) {
-          console.error('Supabase product insert error:', error);
+          console.error('Supabase product insert error details:', error);
           showToast('ডেটাবেজে সেভ করতে সমস্যা: ' + error.message);
+        } else {
+          console.log('Product inserted successfully into Supabase');
         }
       } catch (err) {
         console.warn('Error adding product to Supabase:', err);
