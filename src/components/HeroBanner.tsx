@@ -76,7 +76,7 @@ export const HeroBanner: React.FC = () => {
           {/* Right Visual Image */}
           <div className="lg:col-span-6 relative h-64 sm:h-80 lg:h-full min-h-[300px] flex items-center justify-center p-4">
             <img
-              src="/src/assets/images/hero_banner_littlehug_1792050430352.jpg"
+              src="/assets/images/hero_banner_littlehug_1792050430352.jpg"
               alt="LittleHug BD Baby & Kids Collection"
               className="w-full h-full object-cover rounded-2xl shadow-sm"
               loading="eager"
