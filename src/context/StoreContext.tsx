@@ -786,9 +786,16 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const deleteCategory = async (categoryId: string) => {
     if (isSupabaseConfigured && supabase) {
       try {
-        await supabase.from('categories').delete().eq('id', categoryId);
+        const { error } = await supabase.from('categories').delete().eq('id', categoryId);
+        if (error) {
+          console.error('Supabase category delete error:', error);
+          showToast('ক্যাটাগরি ডিলিট করতে সমস্যা: ' + error.message);
+          return; // Stop if DB delete fails
+        }
       } catch (err) {
         console.warn('Error deleting category from Supabase:', err);
+        showToast('ক্যাটাগরি ডিলিট করতে এরর হয়েছে');
+        return;
       }
     }
 
