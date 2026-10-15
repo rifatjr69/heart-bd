@@ -751,9 +751,15 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const deleteProduct = async (productId: string) => {
     if (isSupabaseConfigured && supabase) {
       try {
-        await supabase.from('products').delete().eq('id', productId);
+        const { error } = await supabase.from('products').delete().eq('id', productId);
+        if (error) {
+          console.error('Error deleting product from Supabase:', error);
+          showToast('ডেটাবেজ থেকে মুছতে সমস্যা হয়েছে');
+          return;
+        }
       } catch (err) {
         console.warn('Error deleting product from Supabase:', err);
+        return;
       }
     }
 
