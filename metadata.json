@@ -1,0 +1,6 @@
+{
+  "name": "LittleHug BD - Baby & Kids Store",
+  "description": "LittleHug BD (ছোট্ট আদর, বড় হাসি) - Premium Bangladeshi baby & kids gift boxes, toy collections, and travel luggage with cash on delivery nationwide.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
