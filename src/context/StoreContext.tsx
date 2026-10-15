@@ -215,33 +215,15 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (!isSupabaseConfigured || !supabase) return;
     const client = supabase;
 
-    client.from('products').select('*').then(async ({ data, error }) => {
+    client.from('products').select('*').then(({ data, error }) => {
       if (!error && data) {
-        if (data.length > 0) {
-          setProducts(data);
-        } else {
-          try {
-            await client.from('products').insert(INITIAL_PRODUCTS);
-            setProducts(INITIAL_PRODUCTS);
-          } catch (e) {
-            console.warn('Error seeding products:', e);
-          }
-        }
+        setProducts(data);
       }
     });
 
-    client.from('categories').select('*').then(async ({ data, error }) => {
+    client.from('categories').select('*').then(({ data, error }) => {
       if (!error && data) {
-        if (data.length > 0) {
-          setCategories(data);
-        } else {
-          try {
-            await client.from('categories').insert(INITIAL_CATEGORIES);
-            setCategories(INITIAL_CATEGORIES);
-          } catch (e) {
-            console.warn('Error seeding categories:', e);
-          }
-        }
+        setCategories(data);
       }
     });
 
