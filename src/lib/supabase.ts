@@ -20,6 +20,9 @@ export const supabase: SupabaseClient | null = isSupabaseConfigured
     })
   : null;
 
+// Storage bucket নাম (supabase_storage_setup.sql এর সাথে মিল থাকতে হবে)
+export const IMAGE_BUCKET = 'product-images';
+
 // Known admin emails for dev preview / instant admin verification
 export const KNOWN_ADMINS = [
   'dj@gmail.com',
@@ -100,40 +103,59 @@ export const fetchUserRoleFromDatabase = async (
   return 'customer';
 };
 
-// Upload product image to Supabase Storage or fallback to base64 Data URL
+// Supabase এর টেকনিক্যাল error কে বোঝার মতো বাংলা মেসেজে রূপান্তর
+const friendlyStorageError = (message: string): string => {
+  const m = message.toLowerCase();
+  if (m.includes('bucket not found')) {
+    return `Supabase এ "${IMAGE_BUCKET}" নামের bucket তৈরি করা নেই (supabase_storage_setup.sql চালান)`;
+  }
+  if (m.includes('row-level security') || m.includes('policy') || m.includes('unauthorized') || m.includes('not allowed')) {
+    return 'আপলোডের অনুমতি নেই — Supabase অ্যাকাউন্টে লগইন করা আছে কিনা এবং storage policy ঠিক আছে কিনা দেখুন';
+  }
+  if (m.includes('payload too large') || m.includes('exceeded the maximum')) {
+    return 'ছবির সাইজ অনেক বড়, ছোট ছবি দিন';
+  }
+  if (m.includes('failed to fetch') || m.includes('network')) {
+    return 'ইন্টারনেট বা Supabase সংযোগে সমস্যা';
+  }
+  return message;
+};
+
+// Upload image to Supabase Storage.
+// Supabase কনফিগার করা থাকলে আপলোড ব্যর্থ হলে error ছুঁড়বে (আর চুপচাপ base64 এ যাবে না)।
+// শুধু Supabase কনফিগার না থাকলে (লোকাল প্রিভিউ) base64 ব্যবহার হবে।
 export const uploadImageToSupabase = async (file: File): Promise<string> => {
   if (isSupabaseConfigured && supabase) {
-    try {
-      const fileExt = file.name.split('.').pop() || 'jpg';
-      const cleanFileName = `prod-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
-      const filePath = `products/${cleanFileName}`;
+    const rawExt = (file.name.split('.').pop() || 'jpg').toLowerCase();
+    const fileExt = /^[a-z0-9]{2,5}$/.test(rawExt) ? rawExt : 'jpg';
+    const cleanFileName = `img-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
+    const filePath = `products/${cleanFileName}`;
 
-      const { data, error } = await supabase.storage
-        .from('product-images')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: true,
-        });
+    const { error } = await supabase.storage.from(IMAGE_BUCKET).upload(filePath, file, {
+      cacheControl: '3600',
+      upsert: false,
+      contentType: file.type || 'image/jpeg',
+    });
 
-      if (!error && data) {
-        const { data: publicUrlData } = supabase.storage
-          .from('product-images')
-          .getPublicUrl(filePath);
-
-        if (publicUrlData?.publicUrl) {
-          return publicUrlData.publicUrl;
-        }
-      }
-    } catch (err) {
-      console.warn('Supabase storage upload error, falling back to local base64:', err);
+    if (error) {
+      console.error('Supabase storage upload error:', error);
+      throw new Error(friendlyStorageError(error.message));
     }
+
+    const { data: publicUrlData } = supabase.storage.from(IMAGE_BUCKET).getPublicUrl(filePath);
+
+    if (!publicUrlData?.publicUrl) {
+      throw new Error('আপলোড হয়েছে কিন্তু ছবির পাবলিক লিঙ্ক পাওয়া যায়নি (bucket টি Public করুন)');
+    }
+
+    return publicUrlData.publicUrl;
   }
 
-  // Base64 Data URL fallback for instant preview & persistence
+  // Supabase কনফিগার করা নেই: লোকাল প্রিভিউয়ের জন্য base64 Data URL
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result as string);
-    reader.onerror = (e) => reject(e);
+    reader.onerror = () => reject(new Error('ছবি পড়া যায়নি'));
     reader.readAsDataURL(file);
   });
 };
