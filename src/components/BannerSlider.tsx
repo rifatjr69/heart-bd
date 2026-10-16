@@ -81,18 +81,7 @@ export const BannerSlider: React.FC = () => {
             );
             return (
               <div key={b.id} className="w-full shrink-0">
-                {b.link ? (
-                  <a
-                    href={b.link}
-                    target={isExternal ? '_blank' : undefined}
-                    rel={isExternal ? 'noopener noreferrer' : undefined}
-                    className="block"
-                  >
-                    {image}
-                  </a>
-                ) : (
-                  image
-                )}
+                {image}
               </div>
             );
           })}

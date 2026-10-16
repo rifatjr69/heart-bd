@@ -154,6 +154,62 @@ const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
   );
 };
 
+const ProductImageGallery: React.FC<{
+  images: string[];
+  onAdd: (file: File) => void;
+  onRemove: (index: number) => void;
+  uploading: boolean;
+}> = ({ images, onAdd, onRemove, uploading }) => {
+  const inputId = useId();
+  return (
+    <div className="space-y-2">
+      <label className="font-bold text-gray-700 block">পণ্যের ছবিসমূহ (Multiple Images)</label>
+      <div className="grid grid-cols-4 gap-2">
+        {images.map((img, idx) => (
+          <div key={idx} className="relative aspect-square rounded-lg border overflow-hidden">
+            <img src={img} alt="product" className="w-full h-full object-cover" />
+            <button
+              type="button"
+              onClick={() => onRemove(idx)}
+              className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-0.5"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          </div>
+        ))}
+        {images.length < 5 && (
+          <label
+            htmlFor={inputId}
+            className="aspect-square rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center cursor-pointer hover:border-[#F8628D]"
+          >
+            {uploading ? (
+              <Loader2 className="w-5 h-5 text-[#F8628D] animate-spin" />
+            ) : (
+              <>
+                <Upload className="w-5 h-5 text-gray-400" />
+                <span className="text-[10px] text-gray-400">Add</span>
+              </>
+            )}
+          </label>
+        )}
+      </div>
+      <input
+        id={inputId}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        disabled={uploading}
+        className="sr-only"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          e.target.value = '';
+          if (file) onAdd(file);
+        }}
+      />
+    </div>
+  );
+};
+
+
 export const AdminDashboard: React.FC = () => {
   const {
     isAdminDashboardOpen,
@@ -176,6 +232,12 @@ export const AdminDashboard: React.FC = () => {
   } = useStore();
 
   const [activeTab, setActiveTab] = useState<'orders' | 'products' | 'banners' | 'settings' | 'sql'>('orders');
+
+  const [renderTrigger, setRenderTrigger] = useState(0);
+
+  useEffect(() => {
+    setRenderTrigger(prev => prev + 1);
+  }, [orders]);
 
   // Orders filter & search
   const [orderStatusFilter, setOrderStatusFilter] = useState<string>('all');
@@ -239,7 +301,10 @@ export const AdminDashboard: React.FC = () => {
 
   // Filter orders by status and search query (name, phone, order number)
   const filteredOrders = orders.filter((o) => {
-    const matchStatus = orderStatusFilter === 'all' ? true : o.status === orderStatusFilter;
+    const matchStatus =
+      orderStatusFilter === 'all'
+        ? o.status !== 'cancelled'
+        : o.status === orderStatusFilter;
     const matchSearch = orderSearchQuery.trim()
       ? o.order_number.toLowerCase().includes(orderSearchQuery.toLowerCase()) ||
         o.customer_name.toLowerCase().includes(orderSearchQuery.toLowerCase()) ||
@@ -249,6 +314,7 @@ export const AdminDashboard: React.FC = () => {
   });
 
   const totalRevenue = orders.reduce((sum, o) => (o.status !== 'cancelled' ? sum + o.total : sum), 0);
+  const totalOrdersCount = orders.filter((o) => o.status !== 'cancelled').length;
   const pendingCount = orders.filter((o) => o.status === 'pending').length;
   const deliveredCount = orders.filter((o) => o.status === 'delivered').length;
 
@@ -265,8 +331,8 @@ export const AdminDashboard: React.FC = () => {
     return matchCategory && matchSearch;
   });
 
-  /* ---------- Product image upload ---------- */
-  const handleProductImageSelect = async (file: File, isEdit: boolean) => {
+  /* ---------- Product image upload (Multiple) ---------- */
+  const handleProductImageAdd = async (file: File, isEdit: boolean) => {
     try {
       setIsUploadingProductImage(true);
       showToast('ছবি আপলোড হচ্ছে...');
@@ -274,13 +340,12 @@ export const AdminDashboard: React.FC = () => {
 
       if (isEdit) {
         setEditingProduct((prev) =>
-          prev ? { ...prev, image_url: url, images: [url, ...(prev.images || []).filter((i) => i !== url)] } : prev
+          prev ? { ...prev, images: [...(prev.images || []), url] } : prev
         );
       } else {
         setNewProductForm((prev) => ({
           ...prev,
-          image_url: url,
-          images: [url, ...(prev.images || []).filter((i) => i !== url)],
+          images: [...(prev.images || []), url],
         }));
       }
       showToast('✓ ছবি সফলভাবে আপলোড হয়েছে!');
@@ -289,6 +354,19 @@ export const AdminDashboard: React.FC = () => {
       showToast(`ছবি আপলোড ব্যর্থ: ${getErrorMessage(err)}`);
     } finally {
       setIsUploadingProductImage(false);
+    }
+  };
+
+  const handleProductImageRemove = (index: number, isEdit: boolean) => {
+    if (isEdit) {
+      setEditingProduct((prev) =>
+        prev ? { ...prev, images: prev.images.filter((_, i) => i !== index) } : prev
+      );
+    } else {
+      setNewProductForm((prev) => ({
+        ...prev,
+        images: prev.images.filter((_, i) => i !== index),
+      }));
     }
   };
 
@@ -320,28 +398,26 @@ export const AdminDashboard: React.FC = () => {
         ? categories.find((c) => c.slug === productCategoryFilter || c.id === productCategoryFilter)
         : categories[0];
 
-    const img = activeCat?.image_url || DEFAULT_PRODUCT_IMAGE;
-
     setNewProductForm({
       name: '',
       name_bn: '',
       category_id: activeCat?.id || categories[0]?.id,
       category_slug: activeCat?.slug || categories[0]?.slug,
-      price: 1800,
-      old_price: 3600,
-      discount_percent: 50,
-      badge: '50% ছাড়',
-      secondary_badge: 'NEW',
+      price: 0,
+      old_price: 0,
+      discount_percent: 0,
+      badge: '',
+      secondary_badge: '',
       sold_count: 0,
       rating: 5.0,
-      stock: 25,
-      is_featured: true,
+      stock: 10,
+      is_featured: false,
       is_flash_sale: false,
-      is_hot_deal: true,
+      is_hot_deal: false,
       is_active: true,
-      image_url: img,
-      images: [img],
-      description: 'প্রিমিয়াম কোয়ালিটির বেবি গিফট বক্স',
+      image_url: DEFAULT_PRODUCT_IMAGE,
+      images: [DEFAULT_PRODUCT_IMAGE],
+      description: '',
     });
     setIsNewProductModalOpen(true);
   };
@@ -377,8 +453,8 @@ export const AdminDashboard: React.FC = () => {
       is_flash_sale: Boolean(newProductForm.is_flash_sale),
       is_hot_deal: Boolean(newProductForm.is_hot_deal),
       is_active: true,
-      image_url: newProductForm.image_url || DEFAULT_PRODUCT_IMAGE,
-      images: [newProductForm.image_url || DEFAULT_PRODUCT_IMAGE],
+      image_url: newProductForm.images?.[0] || DEFAULT_PRODUCT_IMAGE,
+      images: newProductForm.images?.length ? newProductForm.images : [DEFAULT_PRODUCT_IMAGE],
       description: newProductForm.description || '',
     });
     setIsNewProductModalOpen(false);
@@ -749,7 +825,7 @@ export const AdminDashboard: React.FC = () => {
                   <span className="text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase block">
                     Total Orders
                   </span>
-                  <span className="text-xl sm:text-2xl font-black text-gray-900 font-mono">{orders.length}</span>
+                  <span className="text-xl sm:text-2xl font-black text-gray-900 font-mono">{totalOrdersCount}</span>
                 </div>
                 <div className="p-3 sm:p-4 rounded-2xl bg-emerald-50/50 border border-emerald-100 min-w-0">
                   <span className="text-[10px] sm:text-[11px] font-bold text-emerald-600 uppercase block">
@@ -823,7 +899,7 @@ export const AdminDashboard: React.FC = () => {
                 ) : (
                   filteredOrders.map((ord) => (
                     <div
-                      key={ord.id}
+                      key={`${ord.id}-${ord.status}`}
                       className="p-3 sm:p-5 rounded-2xl border border-pink-100 bg-white shadow-xs space-y-3 sm:space-y-3.5 hover:border-pink-300 transition-colors min-w-0"
                     >
                       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3 pb-3 border-b border-gray-100">
@@ -884,7 +960,9 @@ export const AdminDashboard: React.FC = () => {
                             </span>
                             <select
                               value={ord.status}
-                              onChange={(e) => updateOrderStatus(ord.id, e.target.value as OrderStatus)}
+                              onChange={async (e) => {
+                                await updateOrderStatus(ord.id, e.target.value as OrderStatus);
+                              }}
                               className="w-full text-xs font-bold bg-pink-50 border border-pink-200 rounded-xl px-2.5 py-2 text-gray-900 focus:outline-hidden cursor-pointer"
                             >
                               <option value="pending">Pending (অপেক্ষমান)</option>
@@ -1230,11 +1308,21 @@ export const AdminDashboard: React.FC = () => {
                   </div>
                 </div>
 
-                <ImageUploadField
-                  label="পণ্যের ছবি (Upload Image File)"
-                  imageUrl={editingProduct.image_url}
+                <div className="space-y-1">
+                  <label className="font-bold text-gray-700 block mb-1">Product Description (বিবরণ)</label>
+                  <textarea
+                    value={editingProduct.description || ''}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, description: e.target.value })}
+                    className="w-full px-3 py-2.5 border rounded-xl text-base sm:text-xs h-32"
+                    placeholder="Enter detailed product description here..."
+                  />
+                </div>
+
+                <ProductImageGallery
+                  images={editingProduct.images || []}
                   uploading={isUploadingProductImage}
-                  onSelect={(file) => handleProductImageSelect(file, true)}
+                  onAdd={(file) => handleProductImageAdd(file, true)}
+                  onRemove={(index) => handleProductImageRemove(index, true)}
                 />
 
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-1">
@@ -1263,7 +1351,11 @@ export const AdminDashboard: React.FC = () => {
                 <button
                   disabled={isUploadingProductImage}
                   onClick={() => {
-                    updateProduct(editingProduct);
+                    const updatedProduct = {
+                        ...editingProduct,
+                        image_url: editingProduct.images?.[0] || DEFAULT_PRODUCT_IMAGE,
+                    };
+                    updateProduct(updatedProduct);
                     setEditingProduct(null);
                   }}
                   className="flex-1 py-2.5 bg-[#1F1F24] hover:bg-black disabled:opacity-60 text-white font-bold rounded-xl text-xs cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
@@ -1406,37 +1498,23 @@ export const AdminDashboard: React.FC = () => {
                   </div>
                 </div>
 
-                <ImageUploadField
-                  label="পণ্যের ছবি (Upload Image File)"
-                  imageUrl={newProductForm.image_url}
+                <ProductImageGallery
+                  images={newProductForm.images || []}
                   uploading={isUploadingProductImage}
-                  onSelect={(file) => handleProductImageSelect(file, false)}
+                  onAdd={(file) => handleProductImageAdd(file, false)}
+                  onRemove={(index) => handleProductImageRemove(index, false)}
                 />
 
-                <div>
-                  <label className="font-bold text-gray-700 block mb-1">অথবা তৈরি ছবি বেছে নিন</label>
-                  <select
-                    value={newProductForm.image_url || ''}
-                    onChange={(e) =>
-                      setNewProductForm({
-                        ...newProductForm,
-                        image_url: e.target.value,
-                        images: [e.target.value],
-                      })
-                    }
-                    className="w-full px-3 py-2.5 border rounded-xl bg-white text-base sm:text-xs"
-                  >
-                    {newProductForm.image_url &&
-                      !PRESET_IMAGES.some((i) => i.value === newProductForm.image_url) && (
-                        <option value={newProductForm.image_url}>আপলোড করা / ক্যাটাগরির ছবি</option>
-                      )}
-                    {PRESET_IMAGES.map((img) => (
-                      <option key={img.value} value={img.value}>
-                        {img.label}
-                      </option>
-                    ))}
-                  </select>
+                <div className="space-y-1">
+                  <label className="font-bold text-gray-700 block mb-1">Product Description (বিবরণ)</label>
+                  <textarea
+                    value={newProductForm.description || ''}
+                    onChange={(e) => setNewProductForm({ ...newProductForm, description: e.target.value })}
+                    className="w-full px-3 py-2.5 border rounded-xl text-base sm:text-xs h-32"
+                    placeholder="Enter detailed product description here..."
+                  />
                 </div>
+
 
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-1">
                   <label className="flex items-center gap-2 cursor-pointer font-bold text-gray-700">
@@ -1545,17 +1623,6 @@ export const AdminDashboard: React.FC = () => {
                   onSelect={handleCategoryImageSelect}
                   onClear={() => setNewCategoryImageUrl('')}
                 />
-
-                <div>
-                  <label className="font-bold text-gray-700 block mb-1">অথবা ছবির লিঙ্ক (ঐচ্ছিক)</label>
-                  <input
-                    type="text"
-                    value={newCategoryImageUrl}
-                    onChange={(e) => setNewCategoryImageUrl(e.target.value)}
-                    placeholder="https://... বা /assets/images/..."
-                    className="w-full px-3 py-2.5 border rounded-xl text-base sm:text-xs"
-                  />
-                </div>
               </div>
 
               <div className={modalFooter}>

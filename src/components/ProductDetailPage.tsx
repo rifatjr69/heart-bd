@@ -380,138 +380,15 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ product })
         </div>
       </div>
 
-      {/* Tabs: Description, Features, Reviews */}
-      <div className="mt-12 bg-white rounded-3xl border border-pink-100 p-6 sm:p-8 shadow-xs">
-        <div className="flex items-center gap-3 border-b border-pink-100 pb-4">
-          <button
-            onClick={() => setActiveTab('description')}
-            className={`text-sm font-bold pb-2 transition-colors cursor-pointer ${
-              activeTab === 'description'
-                ? 'text-[#F8628D] border-b-2 border-[#F8628D]'
-                : 'text-gray-500 hover:text-gray-900'
-            }`}
-          >
-            বিবরণ (Description)
-          </button>
-          <button
-            onClick={() => setActiveTab('features')}
-            className={`text-sm font-bold pb-2 transition-colors cursor-pointer ${
-              activeTab === 'features'
-                ? 'text-[#F8628D] border-b-2 border-[#F8628D]'
-                : 'text-gray-500 hover:text-gray-900'
-            }`}
-          >
-            বৈশিষ্ট্য (Key Features)
-          </button>
-          <button
-            onClick={() => setActiveTab('reviews')}
-            className={`text-sm font-bold pb-2 transition-colors cursor-pointer ${
-              activeTab === 'reviews'
-                ? 'text-[#F8628D] border-b-2 border-[#F8628D]'
-                : 'text-gray-500 hover:text-gray-900'
-            }`}
-          >
-            রিভিউ ({product.review_count})
-          </button>
+      {/* Description Section */}
+      {product.description && (
+        <div className="mt-12 bg-white rounded-3xl border border-pink-100 p-6 sm:p-8 shadow-xs">
+          <h4 className="font-black text-gray-900 border-b pb-4 mb-4">বিবরণ (Description)</h4>
+          <div className="text-sm text-gray-700 leading-relaxed font-sans whitespace-pre-line">
+            {product.description}
+          </div>
         </div>
-
-        <div className="pt-6">
-          {activeTab === 'description' && (
-            <div className="space-y-4 text-sm text-gray-700 leading-relaxed font-sans">
-              <p>{product.description}</p>
-              <div className="p-4 bg-pink-50/50 rounded-2xl border border-pink-100">
-                <h4 className="font-bold text-gray-900 mb-2">কেন LittleHug BD থেকে কিনবেন?</h4>
-                <ul className="space-y-1.5 text-xs text-gray-600">
-                  <li className="flex items-center gap-2">
-                    <Check className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>কোনো অগ্রিম টাকা ছাড়াই পণ্য হাতে পেয়ে দেখে মূল্য পরিশোধ করার সুযোগ।</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>সারা বাংলাদেশে পাঠাও কুরিয়ারের মাধ্যমে দ্রুততম হোম ডেলিভারি।</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>১০০% নিরাপদ ও শিশু-বান্ধব (Baby-safe non-toxic materials)।</span>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'features' && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs sm:text-sm">
-              <div className="p-4 rounded-xl bg-pink-50/30 border border-pink-100">
-                <span className="font-bold text-gray-900 block">উপাদান ও নিরাপত্তা:</span>
-                <span className="text-gray-600">১০০% নন-টক্সিক ও হাইপোঅ্যালার্জেনিক ম্যাটেরিয়াল</span>
-              </div>
-              <div className="p-4 rounded-xl bg-pink-50/30 border border-pink-100">
-                <span className="font-bold text-gray-900 block">উপযুক্ত বয়স:</span>
-                <span className="text-gray-600">নবজাতক থেকে ৬ বছর পর্যন্ত</span>
-              </div>
-              <div className="p-4 rounded-xl bg-pink-50/30 border border-pink-100">
-                <span className="font-bold text-gray-900 block">প্যাকেজিং:</span>
-                <span className="text-gray-600">প্রিমিয়াম সাটিন রিবন ও স্পেশাল গ্রিটিংস কার্ড</span>
-              </div>
-              <div className="p-4 rounded-xl bg-pink-50/30 border border-pink-100">
-                <span className="font-bold text-gray-900 block">ওয়ারেন্টি / রিটার্ন:</span>
-                <span className="text-gray-600">ডেলিভারির সময় চেক করে নেওয়ার নিশ্চয়তা</span>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'reviews' && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-4 p-4 bg-amber-50/60 rounded-2xl border border-amber-200">
-                <div className="text-center">
-                  <span className="text-3xl font-black text-amber-600">5.0</span>
-                  <div className="flex text-amber-500 justify-center">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="w-3 h-3 fill-amber-500" />
-                    ))}
-                  </div>
-                </div>
-                <div className="text-xs text-gray-600">
-                  <span className="font-bold text-gray-900 block">সব কাস্টমারদের ৫ স্টার রেটিং</span>
-                  LittleHug BD-এর পণ্য কোয়ালিটি এবং দ্রুত ডেলিভারির প্রশংসা করেছেন শত শত সন্তুষ্ট অভিভাবক।
-                </div>
-              </div>
-
-              {/* Sample Review Comments */}
-              <div className="space-y-3 pt-2">
-                <div className="p-4 rounded-2xl bg-gray-50 border border-gray-100">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-xs text-gray-800">রাহিলা সুলতানা</span>
-                    <span className="text-[10px] text-gray-400">২ দিন আগে</span>
-                  </div>
-                  <div className="flex text-amber-500 my-1">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="w-3 h-3 fill-amber-400 text-amber-400" />
-                    ))}
-                  </div>
-                  <p className="text-xs text-gray-600">
-                    ছবিতে যেমন দেখেছি হুবহু তেমনই পেয়েছি! গিফট প্যাকেজিংটা দারুণ ছিল। আমার বোনের বাচ্চার জন্য নিয়েছিলাম, সবাই ভীষণ খুশি হয়েছে।
-                  </p>
-                </div>
-                <div className="p-4 rounded-2xl bg-gray-50 border border-gray-100">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-xs text-gray-800">তানভীর আহমেদ</span>
-                    <span className="text-[10px] text-gray-400">১ সপ্তাহ আগে</span>
-                  </div>
-                  <div className="flex text-amber-500 my-1">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="w-3 h-3 fill-amber-400 text-amber-400" />
-                    ))}
-                  </div>
-                  <p className="text-xs text-gray-600">
-                    লাগেজটা খুব মজবুত আর চাকাগুলো খুব স্মুথ। ঢাকায় ২ দিনের মাথায় পেয়ে গেছি। ডেলিভারি ম্যানের সামনে দেখে টাকা দিয়েছি। ধন্যবাদ!
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+      )}
 
       {/* Related Products */}
       {relatedProducts.length > 0 && (
