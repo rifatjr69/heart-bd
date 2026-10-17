@@ -38,6 +38,48 @@ export const TopCategories: React.FC = () => {
       <div
         className={`-mx-4 px-4 sm:mx-0 sm:px-0 flex items-start justify-start gap-4 sm:gap-6 lg:gap-8 overflow-x-auto snap-x pb-3 pt-1 ${hideScrollbar}`}
       >
+        {/* All Products Card */}
+        <button
+          onClick={() => {
+            setSelectedCategory(null);
+            closeProductDetail();
+            scrollToProducts();
+          }}
+          className="flex flex-col items-center group cursor-pointer shrink-0 snap-start focus:outline-hidden w-[76px] sm:w-24 lg:w-28"
+        >
+          <div className="relative mb-2">
+            <div
+              className={`w-[68px] h-[68px] sm:w-20 sm:h-20 lg:w-24 lg:h-24 rounded-full p-1 transition-all duration-200 ${
+                selectedCategory === null
+                  ? 'ring-3 ring-[#F8628D] scale-105 shadow-md shadow-pink-200'
+                  : 'group-hover:scale-105 group-hover:ring-2 group-hover:ring-pink-300'
+              }`}
+              style={{
+                background: 'radial-gradient(circle, #FFE4EC 0%, #FFF5F8 100%)',
+              }}
+            >
+              <div className="w-full h-full rounded-full overflow-hidden bg-white border border-pink-100 flex items-center justify-center text-2xl sm:text-3xl">
+                🛍️
+              </div>
+            </div>
+            <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-white rounded-full shadow-xs flex items-center justify-center border border-pink-100">
+              <Heart className="w-3 h-3 text-[#F8628D] fill-[#F8628D]" />
+            </div>
+          </div>
+          <div className="text-center w-full">
+            <span
+              className={`block text-xs sm:text-sm font-black truncate transition-colors ${
+                selectedCategory === null ? 'text-[#F8628D]' : 'text-gray-800 group-hover:text-[#F8628D]'
+              }`}
+            >
+              সকল পণ্য
+            </span>
+            <span className="block text-[10px] sm:text-[11px] font-medium text-gray-400 font-sans truncate">
+              All Products
+            </span>
+          </div>
+        </button>
+
         {categories.map((cat) => {
           const isSelected = selectedCategory === cat.slug;
           return (

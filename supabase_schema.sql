@@ -418,9 +418,8 @@ ON CONFLICT (email) DO NOTHING;
 
 -- Delivery Zones
 INSERT INTO public.delivery_zones (name, name_bn, charge, estimated_days, sort_order) VALUES
-('Inside Dhaka', 'ঢাকার ভিতরে', 60, '১–৩ কার্যদিবস', 1),
-('Around Dhaka (Narayanganj, Gazipur, Savar, Keraniganj)', 'ঢাকার আশেপাশে (নারায়ণগঞ্জ, গাজীপুর, সাভার, কেরানীগঞ্জ)', 100, '১–৩ কার্যদিবস', 2),
-('Outside Dhaka', 'ঢাকার বাইরে', 130, '৩–৫ কার্যদিবস', 3)
+('Inside Dhaka', 'ঢাকার ভিতরে', 100, '১–৩ কার্যদিবস', 1),
+('Outside Dhaka', 'ঢাকার বাইরে', 150, '৩–৫ কার্যদিবস', 3)
 ON CONFLICT DO NOTHING;
 
 -- Site Settings

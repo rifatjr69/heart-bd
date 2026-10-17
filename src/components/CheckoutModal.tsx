@@ -53,8 +53,7 @@ export const CheckoutModal: React.FC = () => {
 
   // Selected Delivery Zone
   const selectedZone = deliveryZones.find((z) => z.id === selectedZoneId) || deliveryZones[0];
-  const isFreeDelivery = subtotal >= settings.free_delivery_threshold;
-  const deliveryCharge = isFreeDelivery ? 0 : selectedZone.charge;
+  const deliveryCharge = selectedZone.charge;
 
   // Extra Threshold Discount (e.g. 5% if subtotal >= 1999)
   let extraDiscount = 0;
@@ -339,20 +338,11 @@ export const CheckoutModal: React.FC = () => {
                 </div>
               )}
 
-              {/* Free Delivery notification box (Screenshot 4) */}
+              {/* Delivery Info Box */}
               <div className="p-2.5 rounded-xl border border-dashed border-[#F8628D]/50 bg-pink-50/50 flex items-center justify-between text-xs font-bold text-gray-800">
                 <div className="flex items-center gap-1.5">
-                  <Gift className="w-4 h-4 text-[#F8628D]" />
-                  <span>
-                    {diffToFree > 0 ? (
-                      <>
-                        আর <span className="text-[#F8628D] font-mono">৳{diffToFree}</span> কিনলেই{' '}
-                        <span className="text-emerald-700">ফ্রি ডেলিভারি</span>
-                      </>
-                    ) : (
-                      <span className="text-emerald-700">অভিনন্দন! আপনি পাচ্ছেন ফ্রি ডেলিভারি 🎉</span>
-                    )}
-                  </span>
+                  <ShieldCheck className="w-4 h-4 text-[#F8628D]" />
+                  <span>সারা বাংলাদেশে ক্যাশ অন ডেলিভারি (পাঠাও কুরিয়ার)</span>
                 </div>
               </div>
 
@@ -468,7 +458,7 @@ export const CheckoutModal: React.FC = () => {
 
                         <div className="text-right">
                           <span className="text-xs font-black text-gray-900 font-mono">
-                            {isFreeDelivery ? 'FREE' : `৳${zone.charge}`}
+                            ৳{zone.charge}
                           </span>
                         </div>
                       </label>
@@ -529,7 +519,7 @@ export const CheckoutModal: React.FC = () => {
                 <div className="flex justify-between text-gray-600">
                   <span>ডেলিভারি চার্জ</span>
                   <span className="font-mono font-bold text-gray-800">
-                    {deliveryCharge === 0 ? 'ফ্রি (৳০)' : `৳${deliveryCharge}`}
+                    ৳{deliveryCharge}
                   </span>
                 </div>
                 {totalDiscount > 0 && (

@@ -18,7 +18,9 @@ export const HotDeals: React.FC = () => {
         (p.short_description && p.short_description.toLowerCase().includes(q))
     );
   } else if (selectedCategory) {
-    displayProducts = products.filter((p) => p.category_slug === selectedCategory);
+    displayProducts = products.filter(
+      (p) => p.category_slug === selectedCategory || p.category_id === selectedCategory
+    );
   } else {
     // Default show hot deals and luggage / toy collection
     displayProducts = products.filter((p) => p.is_hot_deal);

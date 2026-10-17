@@ -36,6 +36,7 @@ export const Header: React.FC = () => {
   };
 
   const navCategories = [
+    { label: 'সকল পণ্য (All)', slug: null },
     { label: 'Newborn', slug: 'baby-gift-box' },
     { label: 'Birthday Gift', slug: 'yellow-box' },
     { label: 'Kids Gift', slug: 'blue-box' },
