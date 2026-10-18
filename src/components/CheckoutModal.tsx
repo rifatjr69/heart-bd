@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Check, Gift, Tag, ShieldCheck, Minus, Plus, CheckCircle, Package } from 'lucide-react';
+import { X, Check, Tag, ShieldCheck, Minus, Plus, CheckCircle, Package, AlertTriangle } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { useStore } from '../context/StoreContext';
 import { CartItem, Order } from '../types';
@@ -176,9 +176,35 @@ export const CheckoutModal: React.FC = () => {
               <h2 className="text-2xl font-black text-gray-900">
                 ধন্যবাদ, {confirmedOrder.customer_name}!
               </h2>
-              <p className="text-xs text-gray-500 font-sans mt-1">
-                আপনার অর্ডারটি নিশ্চিত করা হয়েছে। কোনো অগ্রিম পেমেন্ট লাগবে না।
-              </p>
+            </div>
+
+            {/* ADVANCE DELIVERY CHARGE ALERT (replaces the old "no advance payment" line) */}
+            <div
+              role="alert"
+              className="relative text-left rounded-2xl border-2 border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50 p-4 shadow-sm overflow-hidden"
+            >
+              <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-amber-400" />
+              <div className="flex items-start gap-3 pl-2">
+                <div className="shrink-0 w-9 h-9 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center">
+                  <AlertTriangle className="w-5 h-5" />
+                </div>
+                <div className="space-y-1.5">
+                  <h4 className="text-sm font-black text-amber-900 flex items-center gap-1.5">
+                    <span>📦</span>
+                    <span>ডেলিভারি চার্জ ও অগ্রিম পেমেন্ট সংক্রান্ত তথ্য</span>
+                  </h4>
+                  <p className="text-xs leading-relaxed text-amber-900/90 font-medium">
+                    অর্ডার নিশ্চিত করতে প্রযোজ্য ডেলিভারি চার্জ অগ্রিম পরিশোধ করতে হবে। বাকি পণ্যের মূল্য
+                    ক্যাশ অন ডেলিভারি (COD)-এর মাধ্যমে পরিশোধ করতে পারবেন।
+                  </p>
+                  <div className="inline-flex items-center gap-2 mt-1 px-3 py-1.5 rounded-xl bg-white border border-amber-200 text-xs font-bold text-gray-800">
+                    <span>অগ্রিম ডেলিভারি চার্জ:</span>
+                    <span className="font-mono font-black text-[#F8628D] text-sm">
+                      ৳{confirmedOrder.delivery_charge}
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Order Card summary */}
